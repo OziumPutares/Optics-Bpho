@@ -95,4 +95,4 @@ SpacesInSquareBrackets: false
 Standard: c++20
 TabWidth: 8
 UseTab: Never
-
+QualifierAlignment: Right
