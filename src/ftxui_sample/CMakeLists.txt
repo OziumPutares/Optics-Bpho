@@ -6,7 +6,6 @@ target_link_system_libraries(
   intro
   PRIVATE
   lefticus::tools
-  SFML::Graphics
-  ImGui-SFML::ImGui-SFML)
+  dawn::webgpu_dawn)
 
 target_include_directories(intro PRIVATE "${CMAKE_BINARY_DIR}/configured_files/include")
