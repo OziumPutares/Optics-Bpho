@@ -37,14 +37,14 @@ function(myproject_setup_dependencies)
     set(FREETYPE_LIBRARIES Freetype::Freetype)
   endif()
 
-  if(NOT TARGET dawn)
+  if(NOT TARGET)
     cpmaddpackage(
       NAME
-      dawn
+      Dawn
       GIT_REPOSITORY
       https://dawn.googlesource.com/dawn
       GIT_TAG
-      39a35b8b9dc4b135e30a31f596c5f5d42a4ede30
+      main
       OPTIONS
       "DAWN_FETCH_DEPENDENCIES ON" # Automatically fetch Dawn's dependencies
       "DAWN_ENABLE_DESKTOP_GL OFF" # Disable OpenGL if not needed

@@ -8,4 +8,7 @@ target_link_system_libraries(
   lefticus::tools
   dawn::webgpu_dawn)
 
+if(EMSCRIPTEN)
+  set_target_properties(intro PROPERTIES SUFFIX ".html")
+endif()
 target_include_directories(intro PRIVATE "${CMAKE_BINARY_DIR}/configured_files/include")
