@@ -9,49 +9,36 @@ function(myproject_setup_dependencies)
   # already been provided to us by a parent project
   include(FetchContent)
   # ImGui
+  if(NOT TARGET sfml)
+    FetchContent_Declare(
+      SFML
+      GIT_REPOSITORY https://github.com/SFML/SFML.git
+      GIT_TAG 3.0.0
+      GIT_SHALLOW ON
+      EXCLUDE_FROM_ALL SYSTEM)
+    FetchContent_MakeAvailable(SFML)
+  endif()
   if(NOT TARGET imgui)
-    cpmaddpackage(
-      NAME
-      imgui
-      VERSION
-      1.91.7-docking
-      GITHUB_REPOSITORY
-      ocornut/imgui
-      DOWNLOAD_ONLY
-      TRUE)
-
-    # CMakeLists.txt from https://gist.githubusercontent.com/rokups/f771217b2d530d170db5cb1e08e9a8f4
-    file(
-      DOWNLOAD
-      "https://gist.githubusercontent.com/rokups/f771217b2d530d170db5cb1e08e9a8f4/raw/4c2c14374ab878ca2f45daabfed4c156468e4e27/CMakeLists.txt"
-      "${imgui_SOURCE_DIR}/CMakeLists.txt"
-      EXPECTED_HASH SHA256=fd62f69364ce13a4f7633a9b50ae6672c466bcc44be60c69c45c0c6e225bb086)
-
-    # Options
-    set(IMGUI_EXAMPLES FALSE)
-    set(IMGUI_DEMO FALSE)
-    set(IMGUI_ENABLE_STDLIB_SUPPORT TRUE)
-    # FreeType (https://github.com/cpm-cmake/CPM.cmake/wiki/More-Snippets#freetype)
-    set(FREETYPE_FOUND TRUE)
-    set(FREETYPE_INCLUDE_DIRS "")
-    set(FREETYPE_LIBRARIES Freetype::Freetype)
+    FetchContent_Declare(
+      ImGui
+      GIT_REPOSITORY https://github.com/ocornut/imgui.git
+      GIT_TAG v1.91.7-docking
+      GIT_SHALLOW ON
+      EXCLUDE_FROM_ALL SYSTEM)
+    FetchContent_MakeAvailable(ImGui)
+    FetchContent_GetProperties(ImGui SOURCE_DIR IMGUI_DIR)
   endif()
 
-  if(NOT TARGET)
-    cpmaddpackage(
-      NAME
-      Dawn
-      GIT_REPOSITORY
-      https://dawn.googlesource.com/dawn
-      GIT_TAG
-      main
-      OPTIONS
-      "DAWN_FETCH_DEPENDENCIES ON" # Automatically fetch Dawn's dependencies
-      "DAWN_ENABLE_DESKTOP_GL OFF" # Disable OpenGL if not needed
-      "DAWN_BUILD_EXAMPLES OFF" # Exclude examples to reduce build time
-    )
+  if(NOT TARGET imgui-sfml)
+    set(IMGUI_SFML_FIND_SFML OFF)
+    FetchContent_Declare(
+      ImGui-SFML
+      GIT_REPOSITORY https://github.com/SFML/imgui-sfml
+      GIT_TAG v3.0
+      GIT_SHALLOW ON
+      EXCLUDE_FROM_ALL SYSTEM)
+    FetchContent_MakeAvailable(ImGui-SFML)
   endif()
-
   if(NOT TARGET Catch2::Catch2WithMain)
     cpmaddpackage("gh:catchorg/Catch2@3.3.2")
   endif()

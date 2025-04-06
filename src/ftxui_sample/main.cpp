@@ -1,115 +1,67 @@
-#include <cassert>
-#include <cstdio>
-#include <iostream>
-#include <ostream>
-#include <webgpu/webgpu.h>
-namespace {
+#include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/Graphics/Color.hpp>
+#include <SFML/Graphics/PrimitiveType.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/Vertex.hpp>
+#include <SFML/Graphics/VertexArray.hpp>
+#include <SFML/System/Clock.hpp>
+#include <SFML/System/Vector2.hpp>
+#include <SFML/Window/ContextSettings.hpp>
+#include <SFML/Window/VideoMode.hpp>
+#include <array>
+#include <imgui.h>// necessary for ImGui::*, imgui-SFML.h doesn't include imgui.h
 
-WGPUAdapter requestAdapterSync(WGPUInstance instance, WGPURequestAdapterOptions const *options)
-{
-  // A simple structure holding the local information shared with the
-  // onAdapterRequestEnded callback.
-  WGPUAdapter Adapter = nullptr;
-  bool RequestEnded = false;
+#include <imgui-SFML.h>// for ImGui::SFML::* functions and SFML-specific overloads
 
-  auto OnAdapterRequestEnded = [](WGPURequestAdapterStatus status,
-                                 WGPUAdapter adapter,
-                                 WGPUStringView message,
-                                 // NOLINTNEXTLINE
-                                 void *adpaterData,
-                                 void *requestEnded) {
-    std::puts("Got adapter");
-    // NOLINTNEXTLINE
-    WGPUAdapter &r_Adapter = *reinterpret_cast<WGPUAdapter *>(adpaterData);
-    // NOLINTNEXTLINE
-    bool &REnded = *reinterpret_cast<bool *>(requestEnded);
-    if (status == WGPURequestAdapterStatus_Success) {
-      r_Adapter = adapter;
-    } else {
-      std::cout << "Could not get WebGPU adapter: " << message.data << '\n';
-    }
-    REnded = true;
-  };
-
-  // Call to the WebGPU request adapter procedure
-  auto Future = wgpuInstanceRequestAdapter(instance,
-    options,
-    WGPURequestAdapterCallbackInfo{ .nextInChain = nullptr,
-      .mode = WGPUCallbackMode_WaitAnyOnly,
-      .callback = OnAdapterRequestEnded,
-      .userdata1 = static_cast<void *>(&Adapter),
-      .userdata2 = static_cast<void *>(&RequestEnded) });
-  constexpr int TimeToWait = 0;
-  auto FutureResult = WGPUFutureWaitInfo{ .future = Future, .completed = 0U };
-  wgpuInstanceWaitAny(instance, 1, &FutureResult, TimeToWait);
-
-  // We wait until userData.requestEnded gets true
-#ifdef __EMSCRIPTEN__
-  while (!RequestEnded) { emscripten_sleep(100); }
-#else
-//  while (!RequestEnded) {
-//    std::cout << RequestEnded << '\n';
-//    constexpr auto TimeToWait = std::chrono::milliseconds(100);
-//    std::this_thread::sleep_for(std::chrono::milliseconds(TimeToWait));
-//  }
-#endif
-  std::cout << RequestEnded << '\n';
-  assert(RequestEnded);
-
-  return Adapter;
-}
-void inspectAdapter(WGPUAdapter adapter)
-{
-#ifndef __EMSCRIPTEN__
-  WGPULimits SupportedLimits = {};
-  SupportedLimits.nextInChain = nullptr;
-
-#ifdef WEBGPU_BACKEND_DAWN
-  const bool success = wgpuAdapterGetLimits(adapter, &SupportedLimits) == WGPUStatus_Success;
-#else
-  const bool Success = wgpuAdapterGetLimits(adapter, &SupportedLimits) == WGPUStatus_Success;
-#endif
-
-  if (Success) {
-    std::cout << "Adapter limits:" << '\n';
-    std::cout << " - maxTextureDimension1D: " << SupportedLimits.maxTextureDimension1D << '\n';
-    std::cout << " - maxTextureDimension2D: " << SupportedLimits.maxTextureDimension2D << '\n';
-    std::cout << " - maxTextureDimension3D: " << SupportedLimits.maxTextureDimension3D << '\n';
-    std::cout << " - maxTextureArrayLayers: " << SupportedLimits.maxTextureArrayLayers << '\n';
-  }
-#endif
-}
-
-}// namespace
 
 int main()
 {
-  // We create a descriptor
-  constexpr int KTimedWaitAnyMaxCount = 20;
-  WGPUInstanceDescriptor Desc = { .nextInChain = nullptr,
-    .capabilities = {
-      .nextInChain = nullptr, .timedWaitAnyEnable = 1U, .timedWaitAnyMaxCount = KTimedWaitAnyMaxCount } };
-  Desc.nextInChain = nullptr;
+  sf::ContextSettings Settings;
+  // NOLINTNEXTLINE
+  Settings.antiAliasingLevel = 8;
 
-  // We create the instance using this descriptor
-#ifdef WEBGPU_BACKEND_EMSCRIPTEN
-  WGPUInstance instance = wgpuCreateInstance(nullptr);
-#else//  WEBGPU_BACKEND_EMSCRIPTEN
-  WGPUInstance Instance = wgpuCreateInstance(&Desc);
-#endif//  WEBGPU_BACKEND_EMSCRIPTEN
-  if (Instance == nullptr) {
-    std::puts("Could not initialize WebGPU!\n");
-    return 1;
+  sf::Vector2u screenResolution = { 640, 480 };// NOLINT
+  sf::RenderWindow Window(sf::VideoMode{ screenResolution }, "ImGui + SFML = <3");
+  auto const FrameRate = 60;
+  Window.setFramerateLimit(FrameRate);
+  if (!ImGui::SFML::Init(Window)) { return -1; }
+
+  sf::CircleShape Shape(100.F);
+  Shape.setFillColor(sf::Color::Green);
+  // NOLINTBEGIN
+  std::array<sf::Vector2f, 4> ListOfLinesCoords = {
+    sf::Vector2f{ 10, 12 }, sf::Vector2f{ 12, 10 }, sf::Vector2f{ 32, 32 }, sf::Vector2f{ 32, 12 }
+  };
+  // NOLINTEND
+  auto ListOfLines = sf::VertexArray(sf::PrimitiveType::LineStrip);
+  for (auto Coords : ListOfLinesCoords) {
+    // NOLINTNEXTLINE
+    ListOfLines.append(sf::Vertex{ .position{ Coords.x * 10, Coords.y * 10 }, .color = sf::Color::Cyan });
   }
-  std::cout << "WGPU instance: " << Instance << '\n';
-  std::cout << "Requesting adapter..." << '\n';
 
-  WGPURequestAdapterOptions AdapterOpts = {};
-  AdapterOpts.nextInChain = nullptr;
-  WGPUAdapter Adapter = requestAdapterSync(Instance, &AdapterOpts);
 
-  std::cout << "Got adapter: " << Adapter << '\n';
-  wgpuInstanceRelease(Instance);
-  inspectAdapter(Adapter);
-  wgpuAdapterRelease(Adapter);
+  sf::Clock DeltaClock;
+  while (Window.isOpen()) {
+    while (auto const Event = Window.pollEvent()) {
+      ImGui::SFML::ProcessEvent(Window, *Event);
+
+      if (Event->is<sf::Event::Closed>()) { Window.close(); }
+    }
+
+    ImGui::SFML::Update(Window, DeltaClock.restart());
+
+    ImGui::ShowDemoWindow();
+
+    ImGui::Begin("Hello, world!");
+    ImGui::Button("Look at this pretty button");
+    ImGui::End();
+
+    Window.clear();
+    Window.draw(Shape);
+    Window.draw(ListOfLines);
+    ImGui::SFML::Render(Window);
+    Window.display();
+  }
+
+  ImGui::SFML::Shutdown();
 }

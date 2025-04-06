@@ -1,12 +1,12 @@
 add_executable(intro main.cpp)
 
-target_link_libraries(intro PRIVATE myproject::myproject_options myproject::myproject_warnings)
-
-target_link_system_libraries(
+target_link_libraries(
   intro
-  PRIVATE
-  lefticus::tools
-  dawn::webgpu_dawn)
+  PRIVATE myproject::myproject_options
+          myproject::myproject_warnings
+          lefticus::tools
+          SFML::Graphics
+          ImGui-SFML::ImGui-SFML)
 
 if(EMSCRIPTEN)
   set_target_properties(intro PROPERTIES SUFFIX ".html")
