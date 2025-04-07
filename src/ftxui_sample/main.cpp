@@ -9,16 +9,15 @@
 #include <SFML/Window/ContextSettings.hpp>
 #include <SFML/Window/VideoMode.hpp>
 #include <array>
-#include <imgui.h>// necessary for ImGui::*, imgui-SFML.h doesn't include imgui.h
-
 #include <imgui-SFML.h>// for ImGui::SFML::* functions and SFML-specific overloads
+#include <imgui.h>// necessary for ImGui::*, imgui-SFML.h doesn't include imgui.h
 
 
 int main()
 {
   sf::ContextSettings Settings;
   // NOLINTNEXTLINE
-  Settings.antiAliasingLevel = 8;
+  Settings.antiAliasingLevel = 100;
 
   sf::Vector2u screenResolution = { 640, 480 };// NOLINT
   sf::RenderWindow Window(sf::VideoMode{ screenResolution }, "ImGui + SFML = <3");
