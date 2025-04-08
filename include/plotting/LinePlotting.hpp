@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <array>
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <iterator>
@@ -18,6 +19,10 @@
 #include <span>
 #include <vector>
 namespace plotting {
+template<typename T, std::size_t dimension> struct Vector
+{
+  std::array<T, dimension> points{};
+};
 
 struct Colour
 {
@@ -54,7 +59,7 @@ private:
 
 // Actual implementation
 template<typename T, typename DrawStrat, typename Ret, typename... Params>
-  requires PlottableValue<T> && std::invocable<DrawStrat, Ret, Params...>
+  requires PlottableValue<T> && std::invocable<DrawStrat, Ret, std::span<T>, std::span<T>, Params...>
 class ConcreteLinePlot : PlotConcept<Ret, Params...>
 {
   std::span<T> m_XCooridnates;
@@ -86,6 +91,6 @@ public:
       m_DrawStrategy(std::move(drawingStrategy))
   {}
 
-  virtual Ret draw(Params... parameters) { return m_DrawStrategy(parameters...); }
+  Ret draw(Params... parameters) override { return m_DrawStrategy(m_XCooridnates, m_YCooridnates, parameters...); }
 };
 }// namespace plotting
