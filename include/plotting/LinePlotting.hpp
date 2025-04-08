@@ -15,7 +15,6 @@
 #include <limits>
 #include <memory>
 #include <optional>
-#include <ranges>
 #include <span>
 #include <vector>
 namespace plotting {
@@ -43,15 +42,17 @@ template<typename Ret, typename... Params> class PlotConcept
 {
 public:
   PlotConcept(PlotConcept const &) = default;
-  PlotConcept(PlotConcept &&) = delete;
+  PlotConcept(PlotConcept &&) = default;
   PlotConcept &operator=(PlotConcept const &) = default;
-  PlotConcept &operator=(PlotConcept &&) = delete;
+  PlotConcept &operator=(PlotConcept &&) = default;
   virtual ~PlotConcept() = default;
   virtual Ret draw(Params...) = 0;
   [[nodiscard]] virtual std::unique_ptr<PlotConcept> clone() const = 0;
 
 private:
 };
+
+// Actual implementation
 template<typename T, typename DrawStrat, typename Ret, typename... Params>
   requires PlottableValue<T> && std::invocable<DrawStrat, Ret, Params...>
 class ConcreteLinePlot : PlotConcept<Ret, Params...>
@@ -85,6 +86,6 @@ public:
       m_DrawStrategy(std::move(drawingStrategy))
   {}
 
-  virtual Ret draw(Params... parameters) { return m_DrawStrategy(parameters...); };
+  virtual Ret draw(Params... parameters) { return m_DrawStrategy(parameters...); }
 };
 }// namespace plotting
